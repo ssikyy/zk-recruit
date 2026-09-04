@@ -5,21 +5,19 @@
 - 后端：Java 21 + Spring Boot 3.4 + MyBatis-Plus + MySQL 8
 - 前端：Vue 3 + Vite + Element Plus + Pinia
 - 认证：服务端 Session + HttpOnly Cookie，写操作强制 CSRF Token
-- 首页：前端配置文件 + 静态资源维护，不走后台内容管理
+- 首页：前端配置文件 + 静态资源维护
 
 ## 目录结构
 
 ```text
 project/
-├── 熵基科技轻量招聘系统需求分析.md    需求基线 V1.3
-├── 熵基公司素材/                      品牌素材（复制到 frontend/public/site/）
 ├── backend/                          Spring Boot 后端
 │   ├── src/main/java/com/zkteco/recruit/
 │   │   ├── common/                   统一响应、错误码表、全局异常、分页
 │   │   ├── config/                   安全、CSRF、MyBatis、数据初始化
 │   │   ├── security/                 会话、三层权限校验、限流
 │   │   ├── domain/                   实体、枚举、查询 VO
-│   │   ├── mapper/                   数据访问（含乐观锁条件更新）
+│   │   ├── mapper/                   数据访问
 │   │   ├── service/                  业务逻辑
 │   │   └── web/                      Public / Candidate / HR / Admin 四组接口
 │   └── src/main/resources/
