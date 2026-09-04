@@ -1,0 +1,90 @@
+name: zk-recruit
+
+services:
+  db:
+    image: public.ecr.aws/docker/library/mysql:8.4
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Shanghai
+      MYSQL_DATABASE: zk_recruit
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend/src/main/resources/db/schema.sql:/docker-entrypoint-initdb.d/001-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    networks:
+      - internal
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Shanghai
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/zk_recruit?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      STORAGE_ROOT: /data/storage
+      SERVER_FORWARD_HEADERS_STRATEGY: framework
+      SERVER_SERVLET_SESSION_COOKIE_SECURE: "true"
+      APP_SECURITY_ALLOWEDORIGINS: https://${SITE_DOMAIN}
+      APP_INIT_ADMINEMAIL: ${ADMIN_EMAIL}
+      APP_INIT_ADMINPASSWORD: ${ADMIN_PASSWORD}
+      APP_INIT_DEMODATA: ${DEMO_DATA:-true}
+      LOGGING_LEVEL_ROOT: INFO
+      LOGGING_LEVEL_COM_ZKTECO_RECRUIT: INFO
+    volumes:
+      - resume_data:/data/storage
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:8080/api/public/job-categories"]
+      interval: 15s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+    expose:
+      - "8080"
+    networks:
+      - internal
+
+  web:
+    build:
+      context: ./frontend
+    restart: unless-stopped
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN}
+      SITE_IP: ${SITE_IP}
+      ACME_EMAIL: ${ADMIN_EMAIL}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - internal
+
+networks:
+  internal:
+
+volumes:
+  mysql_data:
+  resume_data:
+  caddy_data:
+  caddy_config:

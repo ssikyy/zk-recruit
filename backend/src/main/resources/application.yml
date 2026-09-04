@@ -1,0 +1,73 @@
+server:
+  port: 8080
+  servlet:
+    session:
+      timeout: 2h
+      cookie:
+        name: ZKSESSION
+        http-only: true
+        same-site: lax
+        # 生产环境必须配合 HTTPS 打开 secure（§16.2）
+        secure: false
+
+spring:
+  application:
+    name: recruit-backend
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/zk_recruit?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+    username: ${DB_USER:zk_recruit}
+    password: ${DB_PASSWORD:Zk_recruit#2026}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 10000
+  servlet:
+    multipart:
+      # 简历附件上限 10MB，由业务代码二次校验（§9.3）
+      max-file-size: 12MB
+      max-request-size: 15MB
+  jackson:
+    default-property-inclusion: always
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+    serialization:
+      write-dates-as-timestamps: false
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    default-enum-type-handler: org.apache.ibatis.type.EnumTypeHandler
+  global-config:
+    banner: false
+    db-config:
+      id-type: auto
+      logic-delete-field: null
+
+app:
+  # 简历附件存储根目录（D7）：严禁配置为静态资源目录
+  storage:
+    root: ${STORAGE_ROOT:./storage}
+    resume-dir: resume
+    resume-max-size: 10485760      # 10MB
+  apply:
+    max-attempts: 3                # §9.6 同一职位投递次数上限
+  security:
+    login-fail-threshold: 5        # §8.2 连续失败次数
+    login-lock-minutes: 10
+    register-ip-limit-per-hour: 10
+    resume-upload-limit-per-hour: 10
+    withdraw-limit-per-hour: 20
+    allowed-origins: http://localhost:5173,http://127.0.0.1:5173
+  init:
+    # 首次启动自动创建管理员 HR 与字典数据（§16.6）
+    enabled: true
+    admin-email: hr.admin@zkteco.com
+    admin-password: Admin@2026
+    admin-name: 系统管理员
+    demo-data: true                # 是否灌入演示职位与候选人
+
+logging:
+  level:
+    root: INFO
+    com.zkteco.recruit: DEBUG

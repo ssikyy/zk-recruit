@@ -1,0 +1,25 @@
+# 构建产物
+backend/target/
+frontend/dist/
+frontend/node_modules/
+
+# 运行时文件存储（简历附件与站点图片）
+backend/storage/
+
+# 工具与系统文件
+.playwright-cli/
+output/
+.DS_Store
+*.log
+.idea/
+
+# 部署密钥与本地环境配置
+.env
+.env.*
+!.env.example
+
+# 数据库备份与简历附件（含个人数据，禁止入库）
+backups/
+*.sql.gz
+*.dump
+resumes.tar.gz
